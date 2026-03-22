@@ -1,0 +1,62 @@
+.table-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.table-meta {
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.table-scroll {
+  overflow-x: auto;
+  border-radius: 0.75rem;
+  border: 1px solid #1e2433;
+}
+
+.tx-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.tx-table thead {
+  background: #131720;
+  position: sticky;
+  top: 0;
+}
+
+.tx-table th {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  border-bottom: 1px solid #1e2433;
+}
+
+.tx-table td {
+  padding: 0.65rem 1rem;
+  border-bottom: 1px solid #1a2030;
+  white-space: nowrap;
+  color: #cbd5e1;
+}
+
+.tx-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.tx-table tbody tr:hover td {
+  background: #151c2c;
+}
+
+.badge {
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+}

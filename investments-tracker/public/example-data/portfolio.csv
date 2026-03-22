@@ -1,0 +1,58 @@
+date;ticker;name;type;action;quantity;price;currency;broker;comment;
+
+
+2021-03-15 10:00;AAPL;Apple Inc.;stock;buy;10;121.03;USD;Fidelity;
+2021-11-02 10:00;AAPL;Apple Inc.;stock;buy;5;148.96;USD;Fidelity;
+2022-09-12 10:00;AAPL;Apple Inc.;stock;buy;8;154.53;USD;Fidelity;Bear market dip
+2024-02-20 10:00;AAPL;Apple Inc.;stock;buy;5;184.37;USD;Fidelity;
+
+
+2021-06-14 10:00;MSFT;Microsoft Corp.;stock;buy;5;258.52;USD;Fidelity;
+2022-03-08 10:00;MSFT;Microsoft Corp.;stock;buy;4;289.41;USD;Fidelity;
+2023-10-25 10:00;MSFT;Microsoft Corp.;stock;buy;3;327.89;USD;Fidelity;
+2024-06-10 10:00;MSFT;Microsoft Corp.;stock;sell;4;440.22;USD;Fidelity;Partial profit taking
+
+
+2021-04-14 10:00;TSLA;Tesla Inc.;stock;buy;5;728.75;USD;Fidelity;
+2021-11-18 10:00;TSLA;Tesla Inc.;stock;sell;5;1013.39;USD;Fidelity;Closed — profit taken
+
+
+2020-08-10 10:00;SPY;SPDR S&P 500 ETF Trust;etf;buy;5;328.10;USD;Fidelity;
+2021-01-19 10:00;SPY;SPDR S&P 500 ETF Trust;etf;buy;3;373.88;USD;Fidelity;
+2022-06-16 10:00;SPY;SPDR S&P 500 ETF Trust;etf;buy;5;365.51;USD;Fidelity;Bear market accumulation
+2023-04-03 10:00;SPY;SPDR S&P 500 ETF Trust;etf;buy;2;404.56;USD;Fidelity;
+
+
+2021-04-06 10:00;VWRL.AS;Vanguard FTSE All-World UCITS ETF (Dist);etf;buy;20;88.06;EUR;IBKR;
+2022-01-10 10:00;VWRL.AS;Vanguard FTSE All-World UCITS ETF (Dist);etf;buy;15;95.42;EUR;IBKR;
+2022-10-03 10:00;VWRL.AS;Vanguard FTSE All-World UCITS ETF (Dist);etf;buy;25;80.78;EUR;IBKR;Dip buying
+2023-07-12 10:00;VWRL.AS;Vanguard FTSE All-World UCITS ETF (Dist);etf;buy;15;100.20;EUR;IBKR;
+2024-03-05 10:00;VWRL.AS;Vanguard FTSE All-World UCITS ETF (Dist);etf;buy;10;112.34;EUR;IBKR;
+
+
+2022-05-09 10:00;IWDA.AS;iShares Core MSCI World UCITS ETF (Acc);etf;buy;30;63.28;EUR;IBKR;
+2023-02-14 10:00;IWDA.AS;iShares Core MSCI World UCITS ETF (Acc);etf;buy;20;68.12;EUR;IBKR;
+2024-08-05 10:00;IWDA.AS;iShares Core MSCI World UCITS ETF (Acc);etf;buy;15;84.23;EUR;IBKR;
+
+
+2020-10-20 10:00;BTC;Bitcoin;crypto;buy;0.1;11523.40;USD;Coinbase;
+2021-02-08 10:00;BTC;Bitcoin;crypto;buy;0.05;44265.00;USD;Coinbase;Institutional FOMO
+2022-07-11 10:00;BTC;Bitcoin;crypto;buy;0.08;20285.50;USD;Coinbase;Bear market DCA
+2024-01-10 10:00;BTC;Bitcoin;crypto;buy;0.03;46182.00;USD;Coinbase;Spot ETF approved
+
+
+2021-05-17 10:00;ETH;Ethereum;crypto;buy;1.5;3582.00;USD;Coinbase;
+2022-09-15 10:00;ETH;Ethereum;crypto;buy;2.0;1418.70;USD;Coinbase;Post-merge dip
+2023-10-24 10:00;ETH;Ethereum;crypto;buy;0.8;1782.40;USD;Coinbase;
+
+
+2021-08-02 10:00;GLD;SPDR Gold Trust;precious_metal;buy;10;164.32;USD;Fidelity;Inflation hedge
+2022-03-07 10:00;GLD;SPDR Gold Trust;precious_metal;buy;8;191.45;USD;Fidelity;War-driven safe-haven
+2023-11-01 10:00;GLD;SPDR Gold Trust;precious_metal;buy;5;185.20;USD;Fidelity;
+2024-10-25 10:00;GLD;SPDR Gold Trust;precious_metal;buy;5;247.30;USD;Fidelity;All-time high run
+
+
+2022-01-10 10:00;EDO0122;EDO0122;bond;buy;50;100.00;PLN;DM PKO BP;
+2022-06-07 10:00;EDO0622;EDO0622;bond;buy;75;100.00;PLN;DM PKO BP;
+2023-01-09 10:00;EDO0123;EDO0123;bond;buy;100;100.00;PLN;DM PKO BP;
+2023-08-07 10:00;EDO0823;EDO0823;bond;buy;80;100.00;PLN;DM PKO BP;

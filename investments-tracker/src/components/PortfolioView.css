@@ -1,0 +1,244 @@
+.portfolio-view {
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+}
+
+.broker-heading {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  padding: 0 0 0.6rem 0;
+  margin-bottom: 0.75rem;
+  cursor: pointer;
+  text-align: left;
+}
+
+.broker-heading-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  flex: 1;
+}
+
+.broker-heading-stats {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: auto;
+  margin-right: 0.75rem;
+}
+
+.broker-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.05rem;
+}
+
+.broker-stat-label {
+  font-size: 0.6rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+
+.broker-stat-value {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.broker-stat-sep {
+  width: 1px;
+  height: 1.75rem;
+  background: var(--border);
+  flex-shrink: 0;
+}
+
+.broker-chevron {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  transition: transform 0.2s;
+  display: inline-block;
+  flex-shrink: 0;
+}
+.broker-chevron--open { transform: rotate(0deg); }
+.broker-chevron--closed { transform: rotate(-90deg); }
+
+.table-scroll {
+  overflow-x: auto;
+  border-radius: 0.75rem;
+  border: 1px solid var(--border);
+}
+
+.portfolio-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  table-layout: fixed;
+}
+
+/* Fixed column widths — identical across all broker tables */
+.portfolio-table th:nth-child(1)  { width: 14%; } /* Asset       */
+.portfolio-table th:nth-child(2)  { width: 7%;  } /* Units       */
+.portfolio-table th:nth-child(3)  { width: 8%;  } /* Min Buy     */
+.portfolio-table th:nth-child(4)  { width: 8%;  } /* Max Buy     */
+.portfolio-table th:nth-child(5)  { width: 9%;  } /* Curr Price  */
+.portfolio-table th:nth-child(6)  { width: 7%;  } /* Days Held   */
+.portfolio-table th:nth-child(7)  { width: 8%;  } /* Invested    */
+.portfolio-table th:nth-child(8)  { width: 9%;  } /* Curr Value  */
+.portfolio-table th:nth-child(9)  { width: 7%;  } /* Return %    */
+.portfolio-table th:nth-child(10) { width: 9%;  } /* Gain/Loss   */
+.portfolio-table th:nth-child(11) { width: 7%;  } /* Portfolio % */
+.portfolio-table th:nth-child(12) { width: 7%;  } /* History btn */
+
+.portfolio-table thead {
+  background: var(--bg-surface);
+  position: sticky;
+  top: 0;
+}
+
+.portfolio-table th {
+  padding: 0.7rem 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--border);
+}
+
+.portfolio-table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.portfolio-table tbody tr:last-child td { border-bottom: none; }
+.portfolio-table tbody tr:hover td { background: var(--bg-hover); }
+
+.row-closed td { opacity: 0.45; }
+
+.cell-asset {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.asset-ticker {
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.asset-name {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.positive { color: var(--positive); }
+.negative { color: var(--negative); }
+/* Higher specificity needed to override .portfolio-table td (0-1-1 beats .positive 0-1-0) */
+.portfolio-table td.positive { color: var(--positive); }
+.portfolio-table td.negative { color: var(--negative); }
+
+.loading-dots {
+  color: var(--dots-color);
+  font-size: 1rem;
+  letter-spacing: 0.1em;
+}
+
+/* ─── Loading bar ───────────────────────────────────────────────────────────── */
+
+@keyframes loading-progress {
+  from { width: 0%; }
+  to   { width: 85%; }
+}
+
+.loading-bar-wrap {
+  margin-bottom: 1.25rem;
+}
+
+.loading-bar {
+  height: 3px;
+  border-radius: 2px;
+  background: var(--accent);
+  width: 0%;
+  animation: loading-progress 15s ease-out forwards;
+}
+
+.loading-bar--timed-out {
+  background: var(--negative);
+  animation: none;
+  width: 85%;
+}
+
+.loading-timeout-alert {
+  margin-top: 0.5rem;
+  font-size: 0.82rem;
+  color: var(--negative);
+}
+
+.incomplete-data-banner {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding: 0.65rem 1rem;
+  border-radius: 6px;
+  background: rgba(255, 180, 0, 0.12);
+  border: 1px solid rgba(255, 180, 0, 0.35);
+  font-size: 0.85rem;
+  color: var(--text-secondary, #ccc);
+  line-height: 1.45;
+}
+
+.incomplete-data-banner strong {
+  color: var(--text, #fff);
+}
+
+.incomplete-data-dismiss {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-secondary, #aaa);
+  font-size: 0.9rem;
+  padding: 0 0.25rem;
+  line-height: 1;
+}
+
+.incomplete-data-dismiss:hover {
+  color: var(--text, #fff);
+}
+
+/* ─── History button ─────────────────────────────────────────────────────────── */
+
+.history-btn {
+  background: none;
+  border: 1px solid var(--accent-border);
+  color: var(--accent-link);
+  padding: 0.2rem 0.65rem;
+  border-radius: 0.375rem;
+  font-size: 0.78rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.12s, border-color 0.12s;
+}
+.history-btn:hover {
+  background: var(--accent-badge-bg);
+  border-color: var(--accent-border-hover);
+}

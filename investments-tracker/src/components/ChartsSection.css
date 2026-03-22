@@ -1,0 +1,115 @@
+.charts-section {
+  margin-top: 2rem;
+}
+
+.charts-heading {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 1rem;
+}
+
+.charts-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+.chart-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem 1rem 0.5rem;
+}
+
+.chart-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.chart-card-title {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 0.75rem;
+}
+
+.chart-card-header .chart-card-title {
+  margin-bottom: 0;
+}
+
+.chart-period-selector {
+  display: flex;
+  gap: 0.2rem;
+}
+
+.chart-period-btn {
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.15rem 0.4rem;
+  transition: color 0.12s, border-color 0.12s, background 0.12s;
+}
+
+.chart-period-btn:hover {
+  color: var(--text-primary);
+  border-color: var(--border);
+}
+
+.chart-period-btn.active {
+  color: var(--accent);
+  border-color: var(--accent-border);
+  background: var(--accent-badge-bg);
+}
+
+.chart-loading,
+.chart-empty {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  padding: 4rem 0;
+  text-align: center;
+}
+
+/* Custom tooltip */
+.chart-tooltip {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.78rem;
+  color: var(--text-primary);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+}
+
+.chart-tooltip-label {
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 0.25rem;
+}
+
+.chart-tooltip p {
+  margin: 0.1rem 0;
+}
+
+.chart-tooltip-divider {
+  border: none;
+  border-top: 1px solid var(--border-subtle);
+  margin: 0.35rem 0;
+}
+
+.chart-tooltip-item {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
