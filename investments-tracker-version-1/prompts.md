@@ -1,302 +1,171 @@
-# Optimized Build Prompts — Investment Portfolio Tracker
-
-These prompts are designed to rebuild the `investments-tracker` app faster than the original ~10-12 hours by front-loading the constraints that caused the most rework: multi-currency normalization, gain/loss sign correctness, API failure handling, and chart/table data consistency.
-
-All prompts should be run using the **`portfolio-tracker-advisor`** agent defined in CLAUDE.md.
-
----
-
-## Prompt 1 — Project scaffolding + CLAUDE.md + agent definition
+# CLAUDE.md
 
 ```
-Initialize a new Vite + React project called `investments-tracker` inside this repository.
+Start with initialising CLAUDE.md file. 
 
-Also create a CLAUDE.md file in the project root with:
-1. A description of the app: a client-side portfolio tracker that reads a CSV of investment transactions and displays aggregated stats with live prices. No backend, no database, no paid APIs.
-2. The agent definition to use for all future work:
-   "You're a frontend developer specialist experienced with stock markets and individual investor portfolio tracking. You keep things simple, ask for confirmation before taking action, show step-by-step reasoning, and explain financial terms when introducing them."
-3. The CSV format the app will consume (semicolon-delimited):
-   date;ticker;name;type;action;quantity;price;currency;broker;comment
-   - date: ISO 8601 (YYYY-MM-DD HH:MM:SS)
-   - type values: stock, etf, bond, crypto, cash, precious_metal, other (aliases: stocks→etf, bonds→bond, metal/metals→precious_metal)
-   - action values: buy, sell, dividend
-4. A critical architecture rule:
-   ALL monetary calculations must be done in USD internally. Currency conversion happens only at the display layer. Never mix currencies in calculations.
+# General purpose
+I want to build an application in this repository that would be able to read a CSV file containing a list of all the investments I've made and prepare a series of diagrams enabling me to better understand my investments and track my invested money. 
 
-Then create a `public/example-data/portfolio.csv` with 15 rows covering: stocks (USD), ETFs (EUR), crypto (USD), bonds (PLN), precious metals — include multiple buy transactions for the same ticker, one sell, and two dividend rows.
-
-Show me how to run the app.
+# Constraints
+- I want this application to be simple.
+- I don't want to store the data in any database - I want to give the user two ways to upload the data:
+    * after starting the application just upload the CSV file
+    * or the application can search for a CSV file on my local machine upon startup
+- I don't want this application to have a complicated backend layer - maybe the backend layer won't be needed at all.
+- I want this application to be able to track the current price of the instruments I've bought - but don't use any paid tool for that
+- It needs to show me the chart of a concrete instrument I own with marked timestamps when I bought this particular instrument units
+- I want this application to show the me overall gain or loss on my investments categorised by the instrument I've bought
+- I want this application to be able to draw a series of diagrams:    
+    * a pie chart showing the ratio of my investments: stocks, bonds, crypto, cash, precious metals etc. This chart would be showing this ratio as of now
+    * a chart showing the ratio of my investments (like the point above) but in time
+    * a chart showing a gain or loss over time and compare to the amount of money I've invested over time
+    * a chart showing dividends paid over time
 ```
 
----
-
-## Prompt 2 — Core data model and portfolio aggregation logic
-
+# Agent
 ```
-Before building any UI, implement the core aggregation logic in `src/utils/portfolioAggregator.js`.
+You're a frontend developer specialist experienced with stock market. You have expertiese in individual investors portfolio tracking applications and basing on your experience you're able to suggest best ways to track gains or losses and overall portfolio performance. 
 
-The function takes raw CSV rows and returns data grouped by broker → ticker with these per-position fields:
-- ticker, name, type, broker
-- units: buyUnits - sellUnits
-- minBuyPrice, maxBuyPrice (in original transaction currency)
-- firstBuyDate, lastSellDate
-- buyAmount, sellAmount (in original transaction currency — sum of quantity × price)
-- costBasis: (buyAmount / buyUnits) × units — in original currency
-- dividends: array of { date, amount, currency }
-
-Important constraints to implement correctly from the start:
-1. If units reach 0 (fully sold position), still include it — mark it as closed.
-2. Gain/loss formula: unrealizedGain = currentValue + sellAmount - buyAmount
-   - This means: positive = you made money, negative = you lost money.
-   - Do NOT invert this sign anywhere.
-3. Return rate: (unrealizedGain / buyAmount) × 100
-
-Write unit tests in `src/utils/portfolioAggregator.test.js` with at least these cases:
-- single buy
-- multiple buys of same ticker
-- buy + partial sell (gain scenario — verify sign is positive)
-- buy + partial sell (loss scenario — verify sign is negative)
-- dividend rows are collected but don't affect units or cost basis
+You don't overcomplicate, you keep things simple. 
+Before taking any action, you ask user for confirmation.
+You show step by step reasoning when discussing features.
+You speak plainly. You avoid jargon unless the user clearly understands it, and you always define financial terms when introducing them. 
 ```
 
----
-
-## Prompt 3 — Currency context with forex rates
+# Actual work
 
 ```
-Create `src/context/CurrencyContext.jsx`.
-
-Requirements:
-1. On mount, fetch forex rates from `https://api.frankfurter.app/latest?base=USD` — store rates as a map { USD: 1, EUR: x, PLN: y, ... }.
-2. Expose: displayCurrency (default: PLN), setDisplayCurrency, rates.
-3. Provide a helper function: convertToDisplay(amountUSD) → amountUSD × rates[displayCurrency]
-4. Persist displayCurrency choice to localStorage.
-5. Add a currency dropdown to the app header (EUR, USD, PLN) wired to this context.
-
-Architecture rule: all values passed to this context for conversion must already be in USD. The context never knows or cares about the source currency — that normalization happens in the price service (next step).
+Let's start with building the application. First I need a scafolldings, a simple app that would be able to drag-drop an example CSV file and display it's content. It's likely to be changed later. Prepare an example   
+  CSV file containing 15 positions to well cover different edge cases. Explain step by step how I can run the application.
 ```
 
----
-
-## Prompt 4 — Price service with multi-currency normalization and error handling
-
 ```
-Create `src/services/priceService.js`.
-
-This service fetches current and historical prices and normalizes everything to USD.
-
-APIs to use (all free, no auth):
-- Yahoo Finance for stocks, ETFs, precious metals:
-  proxy through Vite: `/api/yahoo` → `https://query1.finance.yahoo.com`
-  current price endpoint: `/api/yahoo/v8/finance/chart/{ticker}?interval=1d&range=1d`
-  historical endpoint: `/api/yahoo/v8/finance/chart/{ticker}?interval=1mo&range=10y`
-  Yahoo returns prices in the instrument's native currency — the response includes `meta.currency`. Use the forex rates from CurrencyContext to convert to USD: priceUSD = price / rates[instrumentCurrency]
-- CoinGecko for crypto (free tier, no key):
-  resolve ticker → coin ID once, cache in-memory Map to avoid repeat calls
-  current price: `/api/coingecko/simple/price?ids={id}&vs_currencies=usd`
-  historical: `/api/coingecko/coins/{id}/market_chart?vs_currency=usd&days=365`
-
-Configure the Vite proxy for both in `vite.config.js`.
-
-Error handling rules (non-negotiable — do not skip these):
-- Each ticker fetch has an 8-second timeout using AbortController.
-- If a ticker fails (network error, 404, timeout), set its currentPrice to null — never throw, never block other tickers.
-- All tickers are fetched in parallel with Promise.allSettled — one failure must never stop the rest.
-- In the UI, null price displays as "—" (em dash), not 0, not undefined, not NaN.
-- After all fetches complete, if any ticker still has null price, show a non-blocking warning badge (not an alert).
-- Show a loading progress indicator while fetching. If fetching takes more than 15 seconds total, show an alert: "Some price data could not be loaded. Displayed values may be incomplete."
+Add the next feature. If there is a portfolio.csv file defined in the example-data directory, load it on startup. When I drag-drop another file, replace what's displayed with the uploaded file.
 ```
 
----
-
-## Prompt 5 — Polish treasury bond value estimator
-
 ```
-Create `src/utils/bondValueEstimator.js`.
-
-Polish treasury bonds (tickers starting with EDO, COI, ROS, DOS, TOS) have no Yahoo Finance data. Their value must be estimated manually.
-
-Rules:
-- These bonds have face value of 100 PLN per unit.
-- The ticker encodes the maturity date, e.g. EDO1030 matures in October 2030.
-- Estimated current value = face value × units × (1 + annualRate × yearsHeld)
-  where annualRate = 0.065 (6.5% default, can be overridden per bond series)
-  and yearsHeld = days since first buy date / 365
-- Return the value in PLN — the price service will convert to USD using forex rates.
-
-In the price service, before fetching from Yahoo, check if the ticker matches the Polish bond pattern. If yes, use this estimator instead of making an API call.
-
-This is important for correct portfolio totals — if bonds are excluded from current value, the total will be wrong.
+This example CSV file contains dividends. In the application we're writing, I want the dividends to be automatically calculated basin on external resources and my portfolio content. I don't want to put dividends manually in the CSV file.
 ```
 
----
-
-## Prompt 6 — Portfolio view: broker sections with aggregated tables
+# Adding columns broker and comment
 
 ```
-Build `src/components/PortfolioView.jsx`.
-
-On mount:
-1. Load aggregated portfolio data from portfolioAggregator.
-2. Fetch current prices for all tickers using priceService (parallel, with loading state).
-3. Enrich each position with: currentPrice (USD), currentValue (USD), unrealizedGain (USD), returnRate (%).
-
-Render one collapsible section per broker. Each section header shows (collapsed by default):
-  Broker name | Invested | Current Value | Return % | Portfolio %
-
-The header values must use the same enriched data as the table rows below — never recalculate separately.
-
-Inside each broker section, render a table with columns:
-  Asset | Units | Min Buy | Max Buy | Days Held | Invested | Current Value | Return % | Gain/Loss | Portfolio % | History
-
-Rules:
-- Return % and Gain/Loss: green if positive (gain), red if negative (loss). Use a single source of truth for the sign — if gain/loss is positive, both must be green.
-- Days Held: on hover show tooltip "X years, Y months, Z days".
-- Portfolio % is this position's currentValue / total portfolio currentValue.
-- All monetary values displayed using displayCurrency from CurrencyContext — convert from USD at render time only.
-- If currentPrice is null, show "—" for currentValue, returnRate, gain/loss. Do not show 0.
-- History column: a link that opens HistoryModal for that position.
+Great, next I want to replace the current list dispplaying the CSV content as it is to an aggregated view. The data is aggregated by Broker so that I can see the current amounts of assets I own. It means that under each broker I'll see the instrument I have in that broker and I'll see the current number of units per instrument I own. I want this to be displayed in a table with the following columns:
+    * Asset Name (ticker)
+    * Number of units
+    * Min price I've ever bought this instrument for
+    * Max price I've ever bought this instrument for
+    * For how many days I actually have this instrument
+    * How much money I've put into this instrument in total
+    * What's the percentage ratio in my all assets
+    * Rate of return
+    * Total Gain or Loss - if gain make it green, if loss make it red
+    * History - since the original view is grouped, I want to have a link there that would open a modal showing a full history of this particular asset. Within this modal, I want to see the rows of transactions with wrong price (comparing the market price at that time)
 ```
 
----
-
-## Prompt 7 — Portfolio summary bar
-
 ```
-Add `src/components/PortfolioSummary.jsx` above the broker sections.
-
-Show these stats derived from the same enriched portfolio data used in PortfolioView:
-- Total Current Value
-- Total Invested (cost basis)
-- Daily Change % and Daily Change value (from Yahoo's regularMarketChangePercent × position value)
-- All-time Return %
-- Average Yearly Return % (annualized: (1 + totalReturn)^(1/years) - 1)
-
-Green if positive, red if negative.
-
-Important: these numbers must match the sum of the per-broker section headers. Use a single shared calculation — do not calculate portfolio totals separately in multiple places.
+Problems I see for now:
+- VOO row, TOTAL INVESTED shows 4636,78 USD, but there are two rows aggregated there with two amounts 390,14 USD + 505,22 USD != 4636,78 USD 
+- Portfolio %, RETURN % and GAIN/LOSS all show -, which means there is a problem with the API connectivity
 ```
 
----
-
-## Prompt 8 — Charts section
-
 ```
-Add `src/components/ChartsSection.jsx` below the broker sections. Use Recharts.
+Previously I asked for this: "I want to see the rows of transactions with wrong price (comparing the market price at that time)". Which row can present this behaviour?
 
-Build these 4 charts, stacked vertically (not side by side):
-
-1. **Current Allocation pie chart** — by asset type (stock, etf, crypto, bond, precious_metal, cash, other). Show percentage labels on the pie slices without needing to hover.
-
-2. **Allocation over time stacked area chart** — x-axis is months, y-axis is portfolio value, stacked by asset type. The rightmost data point must match the current allocation pie chart exactly (use the same currentValue data source).
-
-3. **Gain/Loss vs Invested line chart** — two lines: total invested over time (cumulative buy amounts) and total portfolio value over time (using historical price data). The current values of both lines must match the portfolio summary totals exactly.
-
-4. **Dividends bar chart** — dividends received per year, in displayCurrency. On hover over a year bar, show a breakdown by asset and month.
-
-All charts must:
-- Use displayCurrency for y-axis labels (update when currency changes).
-- Source their data from the same enriched portfolio state as the tables — never fetch or calculate separately.
-- Handle missing data points gracefully (skip, don't render 0).
+I want this functionality to be able to determine, if I didn't make a mistake putting the data in the CSV file. I'm a passive investor, not an active one. IS really the best option? 
 ```
 
----
-
-## Prompt 9 — History modal with price validation
-
 ```
-Build `src/components/HistoryModal.jsx`.
+Next, I want to be able to collapse each broker so that I can see the data selectively. 
 
-Shows all transactions for a single ticker. Columns: Date | Action | Units | Price | Currency | Comment
-
-Price validation feature:
-- For each buy/sell transaction, fetch the OHLC data for that day from Yahoo Finance (or CoinGecko for crypto).
-- If the transaction price falls within the day's low–high range: show a green dot next to the price.
-- If outside the range: show a red dot (possible data entry error).
-- If OHLC data is unavailable: show a grey dot (no data).
-
-This is a passive investor data-entry sanity check, not a trading signal — display a tooltip explaining this.
+I also want to add dark/light mode switch to the webpage. 
 ```
 
----
-
-## Prompt 10 — CSV drop zone + auto-load
-
 ```
-Build `src/components/CsvDropZone.jsx`.
+Next, I want to see a summary of all my assets above the exising brokers summary. I want to see:
+- all my assets current value (including the assets value market changes)
+- all my assets input value (how much money I've originally spent on them)
+- daily percentage change
+- daily value change
+- all return rate
+- average yearly return rate
 
-Two ways to load data:
-1. Auto-load `public/example-data/portfolio.csv` on app startup using fetch.
-2. Drag-and-drop or file picker to upload a CSV — replaces currently loaded data.
-
-Validation on load:
-- Required columns: date, ticker, name, type, action, quantity, price, currency, broker
-- Normalize type aliases: stocks→etf, bonds→bond, metal→precious_metal, metals→precious_metal
-- If a required column is missing, show a clear error message naming the missing column.
-- Invalid rows (unparseable date, non-numeric quantity/price): skip with a warning, don't crash.
-
-Use PapaParse for CSV parsing with delimiter auto-detection (CSV may use comma or semicolon).
+For all the above, if gain - green, if loss - red.
 ```
 
----
-
-## Prompt 11 — Dark/light theme
-
 ```
-Add a dark/light mode toggle to the app header.
-
-Use CSS variables for all colors — define them in `src/index.css`:
-- :root for dark mode (default)
-- [data-theme="light"] for light mode
-
-Variables to define: --text-primary, --text-secondary, --bg-primary, --bg-secondary, --bg-card, --border, --positive (green), --negative (red), --accent
-
-Persist theme choice to localStorage. Toggle button should show a sun/moon icon.
-
-Do not use any theme library — pure CSS variables only.
+I want to add the following information to the collapsable label for each of the brokers:
+- current value
+- input value
+- all return rate
+- portfolio %
 ```
 
----
-
-## Prompt 12 — Unit tests for all calculations
-
 ```
-Write unit tests using Vitest for the following, covering both the happy path and edge cases:
-
-1. `portfolioAggregator.js`:
-   - Multi-currency positions: two buys in EUR, verify costBasis is in EUR
-   - Fully sold position: units = 0, verify it's included as closed
-   - Gain/loss sign: verify positive when currentValue > costBasis, negative when below
-
-2. `chartDataUtils.js` (create this utility to extract chart data transformation from components):
-   - Allocation pie data sums to 100%
-   - The last point of allocation over time matches current allocation totals
-   - Gain/loss chart current value matches portfolio summary total value
-
-3. `formatCurrency.js`:
-   - USD→PLN conversion
-   - USD→EUR conversion
-   - Null value returns "—"
-
-Run with: `npm test`
+In the header, I want to add a currency that would be used to present the data in the webpage. It doesn't change the currency in the CSV file, it's only used to present the data. Create a dropdown with the values: EUR, USD, PLN
 ```
 
----
-
-## Prompt 13 — Final integration check + example data polish
+```
+Is it possible to write tests so that we're sure that the values displayed are correct? As I verfied, it's displayed correctly but I want to be sure that all the calculations are correct.
+```
 
 ```
-Do a final pass to verify these known problem areas work correctly end-to-end:
+Now, below the aggregated data per broker broker, draw the following charts:
+    * a pie chart showing the ratio of my investments: stocks, bonds, crypto, cash, precious metals etc. This chart would be showing this ratio as of now
+    * a chart showing the ratio of my investments (like the point above) but in time
+    * a chart showing a gain or loss over time and compare to the amount of money I've invested over time
+    * a chart showing dividends paid over time
+```
 
-1. Currency switching: change display currency from PLN to USD to EUR — verify ALL values update, including all 4 charts and all broker section headers. No chart should show a hardcoded "$" symbol.
+```
+Next set of things I don't quite understand or I think should be taken look at and fixed:
+- TLT, return % shows minus, but the amount gain/loss shows positive value - I don't know if it's gain or loss - change the return % and gain/loss to be green if gain, red if loss
+- Coinbase, label value, invested is 33029,04, value is 37032,51, and gain is 100%, I don't get how it's calculated
+- under each table, I'm missing 'current value' next to total invested, so that I could compare these 2
+- when hovering over days held, I'd like to see number of years and days, like "3 years, 5 months, 2 days"
+```
 
-2. Gain/loss consistency: find any position where current value > invested and verify: return % is green and positive, gain/loss is green and positive. Find a position where current value < invested and verify the opposite.
+```
+- I want to add a progress bar of some kind, after refreshing the page, when API data is not loaded yet. Set timeout to 15 secods, if it's not loaded, show alert saying that data is not loaded.
+- make PLN the default currency after reloading the page
+- AAPL, total invested is 8065,93 zł, current value 6427,45 zł, and gain shows +3633,14 zł. How current value is lower, if there is a positive gain 
+- you forgot about displaying the text in green if there is gain and red if there is loss
+```
 
-3. Chart/table consistency: the Total Current Value in PortfolioSummary must equal the sum of all broker Current Value headers, must equal the last data point in the Gain/Loss vs Invested chart.
+```
+Change the order of the following information:
+- broker collapsable panel header - currently: value, cost basis, return, portfolio - change to: cost basis (rename to invested), value (rename to current value), return, portfolio
+- asset, units, min buy, max buy, days held, cost basis, current value, portfolio %, return %, gain/loss, history - change order to: asset, units, min buy, max buy, days held, cost basis (rename to invested), current value, return %, gain/loss, portfolio %, history
 
-4. Polish bonds: verify at least one EDO bond ticker appears with a non-null current value calculated by the bond estimator, converted to display currency.
 
-5. API failure simulation: temporarily change one ticker to an invalid one (e.g. "INVALID999"), reload — verify the rest of the portfolio loads correctly, the invalid ticker shows "—", and no crash occurs.
+Then in the "history" modal, change qty to units
+```
 
-Fix any discrepancies found.
+```
+Another set of things to be fixed:
+- gain/loss vs invested chart, when changing the currancy to PLN it still shows $
+- dividends received chart, when changing the currancy to PLN it still shows $
+- dividends received chart, when hovering over a certain year, I want to see a list of dividends per asset that paid this dividend and which month exactly
+```
+
+```
+I want to focus on the charts:
+- current allocation vs allocation over time - the right edge values, the last values for allocation over time differ from current allocation
+- gain/loss vs invested - it's missing data for the portfolio value for march 26 
+```
+
+```
+After replacing the portfolio.csv file, I can't see the current values for the following tickers:
+- VWRL
+- VHYL
+- EMIM
+```
+
+```
+I want to make the following changes to the diagrams:
+- I want the diagrams be all below each other, not next to each other
+- Current allocation differs again from the allocation over time, when I look at allocation over time, the current values differ from current allocation
+- in the current allocation, I also want to show the percentages without hovering on the pie parts
+- gain/loss vs intested shows different values from the top of the page total invested and total current value
+- dividends chart is missing dividends 
 ```
