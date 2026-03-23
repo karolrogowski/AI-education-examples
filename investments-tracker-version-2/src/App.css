@@ -1,0 +1,73 @@
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  font-family: system-ui, sans-serif;
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1.5rem;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border);
+  gap: 1rem;
+}
+
+.app-header__title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.app-header__controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.app-header__rates-warning {
+  font-size: 0.8rem;
+  color: #f0b429;
+  cursor: help;
+}
+
+.app-header__currency-label {
+  font-size: 0.85rem;
+  opacity: 0.75;
+}
+
+.app-header__currency-select {
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: var(--bg-input);
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+/* ---- Theme toggle button ---- */
+.app-header__theme-btn {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text-primary);
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+  padding: 0.22rem 0.5rem;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.app-header__theme-btn:hover {
+  background: var(--bg-input);
+  border-color: var(--border-strong);
+}
+
+.app-main {
+  flex: 1;
+  padding: 1.5rem;
+}

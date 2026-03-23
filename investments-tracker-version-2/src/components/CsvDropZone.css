@@ -1,0 +1,102 @@
+.cdz-root {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.55rem 1rem;
+  background: var(--bg-card);
+  border: 1px dashed var(--border);
+  border-radius: 6px;
+  margin-bottom: 1rem;
+  transition: border-color 0.15s, background 0.15s;
+  flex-wrap: wrap;
+}
+
+/* Drag-over highlight */
+.cdz-root--dragging {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 6%, var(--bg-card));
+}
+
+/* ---- Left: info area ---- */
+.cdz-info {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.85rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.cdz-status--loading {
+  opacity: 0.55;
+  font-style: italic;
+}
+
+.cdz-status--idle {
+  opacity: 0.5;
+}
+
+.cdz-filename {
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 320px;
+}
+
+.cdz-rowcount {
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.cdz-warnings {
+  color: #f0b429;
+  font-size: 0.8rem;
+  cursor: help;
+  white-space: nowrap;
+}
+
+.cdz-error {
+  color: var(--negative);
+  font-size: 0.85rem;
+}
+
+/* ---- Right: actions ---- */
+.cdz-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.cdz-drop-hint {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.cdz-browse-btn {
+  padding: 0.25rem 0.7rem;
+  font-size: 0.82rem;
+  background: var(--bg-input);
+  color: var(--text-primary);
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s;
+}
+
+.cdz-browse-btn:hover:not(:disabled) {
+  background: var(--bg-hover);
+  border-color: var(--border-strong);
+}
+
+.cdz-browse-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* Hidden native file input */
+.cdz-file-input {
+  display: none;
+}

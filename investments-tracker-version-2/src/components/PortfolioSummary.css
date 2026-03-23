@@ -1,0 +1,59 @@
+.ps-root {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.75rem 0;
+  margin-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+
+/* ---- Individual stat card ---- */
+.ps-card {
+  flex: 1 1 10rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.75rem 1rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  min-width: 9rem;
+}
+
+.ps-card__label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  opacity: 0.5;
+  font-weight: 500;
+}
+
+.ps-card__values {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+/* ---- Value typography ---- */
+.ps-primary {
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+
+.ps-secondary {
+  font-size: 0.8rem;
+  opacity: 0.75;
+}
+
+/* Inherit colour from value--gain / value--loss on the secondary line */
+.ps-secondary.value--gain,
+.ps-secondary.value--loss {
+  opacity: 1;
+}
+
+/* ---- Colour classes (shared with PortfolioView via global cascade) ---- */
+.value--gain    { color: var(--positive); }
+.value--loss    { color: var(--negative); }
+.value--neutral { color: inherit; }

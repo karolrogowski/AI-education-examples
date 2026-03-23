@@ -1,0 +1,184 @@
+.hm-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+}
+
+.hm-dialog {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  width: min(760px, 96vw);
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.hm-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border-strong);
+  gap: 1rem;
+}
+
+.hm-ticker {
+  font-size: 1.15rem;
+  font-weight: 700;
+  display: block;
+}
+
+.hm-name {
+  font-size: 0.85rem;
+  opacity: 0.7;
+  display: block;
+}
+
+.hm-close {
+  background: none;
+  border: none;
+  color: inherit;
+  font-size: 1.1rem;
+  cursor: pointer;
+  opacity: 0.6;
+  padding: 0.1rem 0.3rem;
+  flex-shrink: 0;
+}
+
+.hm-close:hover { opacity: 1; }
+
+.hm-body {
+  padding: 1rem 1.25rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* ---- Meta grid ---- */
+.hm-meta {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.3rem 1rem;
+  margin: 0 0 1rem;
+  font-size: 0.875rem;
+}
+
+.hm-meta dt { opacity: 0.6; }
+.hm-meta dd { margin: 0; font-weight: 500; }
+
+/* ---- Section titles ---- */
+.hm-section-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  opacity: 0.8;
+  margin: 1rem 0 0.4rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ---- OHLC legend ---- */
+.hm-ohlc-legend {
+  margin: 0 0 0.5rem;
+  font-size: 0.78rem;
+  opacity: 0.65;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.hm-legend-sep {
+  display: inline-block;
+  width: 1rem;
+}
+
+/* ---- Table wrapper (horizontal scroll on narrow screens) ---- */
+.hm-table-wrap {
+  overflow-x: auto;
+  margin-bottom: 0.25rem;
+}
+
+/* ---- Tables ---- */
+.hm-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.hm-table th,
+.hm-table td {
+  padding: 0.4rem 0.6rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+
+.hm-table th { opacity: 0.6; font-weight: 500; }
+
+.hm-num {
+  text-align: right !important;
+}
+
+/* ---- Date cell ---- */
+.hm-date {
+  font-variant-numeric: tabular-nums;
+  opacity: 0.85;
+}
+
+/* ---- Action badge ---- */
+.hm-action {
+  display: inline-block;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.1em 0.45em;
+  border-radius: 3px;
+}
+
+.hm-action--buy  {
+  color: var(--positive);
+  background: color-mix(in srgb, var(--positive) 12%, transparent);
+}
+.hm-action--sell {
+  color: var(--negative);
+  background: color-mix(in srgb, var(--negative) 12%, transparent);
+}
+
+/* ---- Price cell with validation dot ---- */
+.hm-price-cell {
+  display: flex !important;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.35rem;
+}
+
+/* ---- Validation dot ---- */
+.hm-dot {
+  font-size: 0.7rem;
+  cursor: default;
+  flex-shrink: 0;
+}
+
+/* ---- Comment cell ---- */
+.hm-comment {
+  opacity: 0.65;
+  font-size: 0.82rem;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---- Empty state ---- */
+.hm-note {
+  margin-top: 1.25rem;
+  font-size: 0.8rem;
+  opacity: 0.5;
+  font-style: italic;
+}
