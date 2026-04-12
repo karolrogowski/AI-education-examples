@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useCurrency } from '../context/CurrencyContext';
 import { aggregatePortfolio } from '../utils/portfolioAggregator';
 import { fetchAllPrices } from '../services/priceService';
+import { fetchHistoricalRates } from '../services/historicalRatesService';
 import { formatCurrency, formatPercent } from '../utils/formatCurrency';
 import PortfolioSummary from './PortfolioSummary';
 import ChartsSection from './ChartsSection';
@@ -60,13 +61,29 @@ function formatDaysTooltip(firstBuyDate) {
  *
  * Currency flow: original currency → USD (here) → displayCurrency (render only).
  */
-function enrichPosition(pos, prices, rates, txRows) {
-  // Convert aggregator amounts from original currency to USD
-  const rate = rates[pos.currency] ?? 1;
-  const buyAmountUSD = pos.buyAmount / rate;
-  const sellAmountUSD = pos.sellAmount / rate;
-  const minBuyUSD = pos.minBuyPrice != null ? pos.minBuyPrice / rate : null;
-  const maxBuyUSD = pos.maxBuyPrice != null ? pos.maxBuyPrice / rate : null;
+function enrichPosition(pos, prices, rates, txRows, getHistoricalRate) {
+  // Compute buy/sell amounts in USD using the exchange rate on each transaction's date.
+  // This ensures that a PLN purchase made in 2021 is converted at the 2021 PLN/USD rate,
+  // not today's rate — giving an accurate picture of what was actually spent.
+  let buyAmountUSD = 0;
+  let sellAmountUSD = 0;
+  for (const r of (txRows ?? [])) {
+    if (r.action !== 'buy' && r.action !== 'sell') continue;
+    const qty   = Number(r.quantity);
+    const price = Number(r.price);
+    // Fall back to current spot rate when historical data is unavailable
+    const historicalRate =
+      getHistoricalRate(r.currency, new Date(r.date)) ?? (rates[r.currency] ?? 1);
+    const amountUSD = (qty * price) / historicalRate;
+    if (r.action === 'buy')  buyAmountUSD  += amountUSD;
+    if (r.action === 'sell') sellAmountUSD += amountUSD;
+  }
+
+  // min/max buy price: still use current rate — we don't track which transaction
+  // had the min/max price, so we can't look up its exact historical rate.
+  const currentRate = rates[pos.currency] ?? 1;
+  const minBuyUSD = pos.minBuyPrice != null ? pos.minBuyPrice / currentRate : null;
+  const maxBuyUSD = pos.maxBuyPrice != null ? pos.maxBuyPrice / currentRate : null;
 
   const priceResult = prices.get(pos.ticker);
   const currentPrice = priceResult?.currentPrice ?? null; // USD
@@ -114,16 +131,18 @@ function enrichPosition(pos, prices, rates, txRows) {
       .map((r) => {
         const qty   = Number(r.quantity);
         const isBuy = r.action === 'buy';
+        const historicalRate =
+          getHistoricalRate(r.currency, new Date(r.date)) ?? (rates[r.currency] ?? 1);
         return {
           date:       new Date(r.date),
-          amountUSD:  isBuy ? (qty * Number(r.price)) / rate : 0,
+          amountUSD:  isBuy ? (qty * Number(r.price)) / historicalRate : 0,
           unitsDelta: isBuy ? qty : -qty,
         };
       }),
   };
 }
 
-function enrichPortfolio(byBroker, prices, rates, rows) {
+function enrichPortfolio(byBroker, prices, rates, rows, getHistoricalRate) {
   const enrichedByBroker = {};
   const allEnriched = [];
 
@@ -132,7 +151,7 @@ function enrichPortfolio(byBroker, prices, rates, rows) {
       const txRows = (rows ?? []).filter(
         (r) => r.broker === broker && r.ticker === pos.ticker,
       );
-      return enrichPosition(pos, prices, rates, txRows);
+      return enrichPosition(pos, prices, rates, txRows, getHistoricalRate);
     });
     enrichedByBroker[broker] = positions;
     allEnriched.push(...positions);
@@ -569,7 +588,7 @@ function BrokerSection({
  *   5. Render broker sections (collapsed by default)
  */
 export default function PortfolioView({ rows: rowsProp }) {
-  const { rates, ratesLoading, convertToDisplay, displayCurrency } = useCurrency();
+  const { rates, ratesLoading, ratesError, convertToDisplay, displayCurrency } = useCurrency();
 
   const [csvRows, setCsvRows] = useState(null);
   const [enriched, setEnriched] = useState(null);
@@ -613,13 +632,16 @@ export default function PortfolioView({ rows: rowsProp }) {
       alert('Some price data could not be loaded. Displayed values may be incomplete.');
     }, 15_000);
 
-    fetchAllPrices(allPositions, {
-      rates,
-      onProgress: (loaded, total) => setLoadProgress({ loaded, total }),
-    }).then(({ prices, failedTickers: failed }) => {
+    Promise.all([
+      fetchAllPrices(allPositions, {
+        rates,
+        onProgress: (loaded, total) => setLoadProgress({ loaded, total }),
+      }),
+      fetchHistoricalRates(csvRows),
+    ]).then(([{ prices, failedTickers: failed }, getHistoricalRate]) => {
       if (!alertFired) clearTimeout(timeoutId);
       setFailedTickers(failed);
-      setEnriched(enrichPortfolio(byBroker, prices, rates, csvRows));
+      setEnriched(enrichPortfolio(byBroker, prices, rates, csvRows, getHistoricalRate));
       setLoading(false);
     });
 
@@ -649,6 +671,11 @@ export default function PortfolioView({ rows: rowsProp }) {
     <div className="pv-root">
       <PortfolioSummary totals={portfolioTotals} />
 
+      {ratesError && (
+        <div className="pv-warning-badge" title={ratesError}>
+          ⚠ {ratesError}
+        </div>
+      )}
       <FailedBadge tickers={failedTickers} />
 
       {Object.entries(enrichedByBroker)

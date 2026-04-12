@@ -30,12 +30,17 @@
  */
 
 import { estimateBondPrice } from '../utils/bondValueEstimator.js';
+import { cacheGet, cacheSet } from './cacheService.js';
 
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
 
 const FETCH_TIMEOUT_MS = 8_000;
+
+// Cache TTLs — current price changes intra-day; history is essentially static
+const TTL_CURRENT_MS = 15 * 60 * 1_000;        // 15 minutes
+const TTL_HISTORY_MS = 24 * 60 * 60 * 1_000;   // 24 hours
 
 // Polish treasury bond prefixes — no market price available, handled separately
 const POLISH_BOND_RE = /^(EDO|COI|ROS|DOS|TOS)/i;
@@ -63,6 +68,18 @@ async function fetchWithTimeout(url) {
   } finally {
     clearTimeout(timer);
   }
+}
+
+/**
+ * Like fetchWithTimeout, but checks sessionStorage before hitting the network.
+ * Caches the raw JSON response on success. Never caches on error (throws).
+ */
+async function cachedFetch(url, ttlMs) {
+  const hit = cacheGet(url);
+  if (hit !== null) return hit;
+  const data = await fetchWithTimeout(url); // throws on failure — nothing is cached
+  cacheSet(url, data, ttlMs);
+  return data;
 }
 
 // ---------------------------------------------------------------------------
@@ -166,8 +183,8 @@ async function fetchYahooData(ticker, rates) {
   // Each call has its own 8-second timeout so a slow history fetch
   // can't block the current price (and vice versa).
   const [currentResult, historyResult] = await Promise.allSettled([
-    fetchWithTimeout(`/api/yahoo/v8/finance/chart/${encoded}?interval=1d&range=1d`),
-    fetchWithTimeout(`/api/yahoo/v8/finance/chart/${encoded}?interval=1mo&range=10y&events=dividends`),
+    cachedFetch(`/api/yahoo/v8/finance/chart/${encoded}?interval=1d&range=1d`, TTL_CURRENT_MS),
+    cachedFetch(`/api/yahoo/v8/finance/chart/${encoded}?interval=1mo&range=10y&events=dividends`, TTL_HISTORY_MS),
   ]);
 
   let currentData = {};
@@ -215,7 +232,7 @@ async function resolveCoinId(ticker) {
 
   if (coinIdCache.has(symbol)) return coinIdCache.get(symbol);
 
-  const data = await fetchWithTimeout(`/api/coingecko/search?query=${symbol}`);
+  const data = await cachedFetch(`/api/coingecko/search?query=${symbol}`, TTL_HISTORY_MS);
   // Find the first coin whose symbol exactly matches — avoid partial-match noise
   const coin = data?.coins?.find((c) => c.symbol.toLowerCase() === symbol);
   if (!coin) throw new Error(`CoinGecko: no coin found for symbol "${symbol}"`);
@@ -229,9 +246,10 @@ async function fetchCoinGeckoData(ticker) {
   const coinId = await resolveCoinId(ticker);
 
   const [currentResult, historyResult] = await Promise.allSettled([
-    fetchWithTimeout(`/api/coingecko/simple/price?ids=${coinId}&vs_currencies=usd`),
-    fetchWithTimeout(
+    cachedFetch(`/api/coingecko/simple/price?ids=${coinId}&vs_currencies=usd`, TTL_CURRENT_MS),
+    cachedFetch(
       `/api/coingecko/coins/${coinId}/market_chart?vs_currency=usd&days=365`,
+      TTL_HISTORY_MS,
     ),
   ]);
 

@@ -21,6 +21,14 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api\/coingecko/, ''),
       },
+
+      // Frankfurter — forex rates (avoids CORS from localhost)
+      // /api/frankfurter/latest → https://api.frankfurter.app/latest
+      '/api/frankfurter': {
+        target: 'https://api.frankfurter.app',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/frankfurter/, ''),
+      },
     },
   },
 

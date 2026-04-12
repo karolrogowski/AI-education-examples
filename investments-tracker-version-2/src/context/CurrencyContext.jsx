@@ -4,7 +4,8 @@ import { createContext, useCallback, useContext, useEffect, useState } from 'rea
 // Fallback rates used only when the API call fails at startup.
 // These are approximate — the app will warn the user in that case.
 // ---------------------------------------------------------------------------
-const FALLBACK_RATES = { USD: 1, EUR: 0.92, PLN: 4.05 };
+const FALLBACK_RATES = { USD: 1, EUR: 0.92, PLN: 4.05, GBP: 0.79 };
+const FALLBACK_CURRENCIES = Object.keys(FALLBACK_RATES).filter((c) => c !== 'USD').join(', ');
 
 const STORAGE_KEY = 'displayCurrency';
 const SUPPORTED_CURRENCIES = ['USD', 'EUR', 'PLN'];
@@ -29,7 +30,7 @@ export function CurrencyProvider({ children }) {
   useEffect(() => {
     const controller = new AbortController();
 
-    fetch('https://api.frankfurter.app/latest?base=USD', {
+    fetch('/api/frankfurter/latest?base=USD', {
       signal: controller.signal,
     })
       .then((res) => {
@@ -45,7 +46,7 @@ export function CurrencyProvider({ children }) {
         if (err.name === 'AbortError') return;
         console.warn('[CurrencyContext] Failed to fetch forex rates — using fallback values.', err);
         setRates(FALLBACK_RATES);
-        setRatesError('Could not load live exchange rates. Displayed conversions may be approximate.');
+        setRatesError(`Could not load live exchange rates for ${FALLBACK_CURRENCIES} — using approximate fallback values.`);
         setRatesLoading(false);
       });
 
