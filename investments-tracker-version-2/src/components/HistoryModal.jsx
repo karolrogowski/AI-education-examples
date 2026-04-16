@@ -1,10 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useCurrency } from '../context/CurrencyContext';
-import { cacheGet, cacheSet } from '../services/cacheService.js';
 import './HistoryModal.css';
-
-// Historical OHLC never changes — 7 days is conservative
-const TTL_OHLC_MS = 7 * 24 * 60 * 60 * 1_000;
 
 // ---------------------------------------------------------------------------
 // OHLC validation status constants
@@ -25,10 +21,6 @@ async function fetchYahooOHLC(ticker, dateStr) {
   const period2 = Math.floor(new Date(dateStr + 'T23:59:59Z').getTime() / 1000);
   const url = `/api/yahoo/v8/finance/chart/${encodeURIComponent(ticker)}` +
     `?period1=${period1}&period2=${period2}&interval=1d`;
-
-  const cached = cacheGet(url);
-  if (cached !== null) return cached;
-
   const controller = new AbortController();
   const tid = setTimeout(() => controller.abort(), 8000);
   try {
@@ -42,9 +34,7 @@ async function fetchYahooOHLC(ticker, dateStr) {
     const low  = quote.low?.[0]  ?? null;
     const high = quote.high?.[0] ?? null;
     if (low == null || high == null) return null;
-    const ohlc = { low, high, currency: result?.meta?.currency ?? null };
-    cacheSet(url, ohlc, TTL_OHLC_MS);
-    return ohlc;
+    return { low, high, currency: result?.meta?.currency ?? null };
   } catch {
     clearTimeout(tid);
     return null;
@@ -76,10 +66,6 @@ async function fetchCoinGeckoOHLC(ticker, dateStr) {
   const period2 = Math.floor(new Date(dateStr + 'T23:59:59Z').getTime() / 1000);
   const url = `/api/coingecko/coins/${coinId}/market_chart/range` +
     `?vs_currency=usd&from=${period1}&to=${period2}`;
-
-  const cached = cacheGet(url);
-  if (cached !== null) return cached;
-
   try {
     const res = await fetch(url);
     if (!res.ok) return null;
@@ -87,9 +73,7 @@ async function fetchCoinGeckoOHLC(ticker, dateStr) {
     const prices = json?.prices ?? [];
     if (prices.length === 0) return null;
     const vals = prices.map(([, p]) => p);
-    const ohlc = { low: Math.min(...vals), high: Math.max(...vals), currency: 'USD' };
-    cacheSet(url, ohlc, TTL_OHLC_MS);
-    return ohlc;
+    return { low: Math.min(...vals), high: Math.max(...vals), currency: 'USD' };
   } catch {
     return null;
   }
