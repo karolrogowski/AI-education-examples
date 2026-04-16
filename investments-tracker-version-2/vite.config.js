@@ -21,6 +21,14 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api\/coingecko/, ''),
       },
+
+      // Frankfurter — forex rates (free, no key required)
+      // /api/frankfurter/latest?base=USD → https://api.frankfurter.app/latest?base=USD
+      '/api/frankfurter': {
+        target: 'https://api.frankfurter.app',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/frankfurter/, ''),
+      },
     },
   },
 

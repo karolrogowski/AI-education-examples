@@ -36,6 +36,8 @@ import { estimateBondPrice } from '../utils/bondValueEstimator.js';
 // ---------------------------------------------------------------------------
 
 const FETCH_TIMEOUT_MS = 8_000;
+const MAX_RETRIES = 3;
+const RETRY_BASE_DELAY_MS = 1_000;
 
 // Polish treasury bond prefixes — no market price available, handled separately
 const POLISH_BOND_RE = /^(EDO|COI|ROS|DOS|TOS)/i;
@@ -53,16 +55,25 @@ const coinIdCache = new Map();
  * Wraps fetch() with an 8-second AbortController timeout.
  * Throws on non-OK HTTP status so callers can treat it as a failure.
  */
-async function fetchWithTimeout(url) {
+async function fetchWithTimeout(url, retries = MAX_RETRIES) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+  let res;
   try {
-    const res = await fetch(url, { signal: controller.signal });
-    if (!res.ok) throw new Error(`HTTP ${res.status} — ${url}`);
-    return await res.json();
+    res = await fetch(url, { signal: controller.signal });
   } finally {
     clearTimeout(timer);
   }
+
+  if (res.status === 429 && retries > 0) {
+    const delay = RETRY_BASE_DELAY_MS * (MAX_RETRIES - retries + 1);
+    console.warn(`[priceService] 429 for ${url} — retrying in ${delay}ms (${retries} retries left)`);
+    await new Promise((resolve) => setTimeout(resolve, delay));
+    return fetchWithTimeout(url, retries - 1);
+  }
+
+  if (!res.ok) throw new Error(`HTTP ${res.status} — ${url}`);
+  return res.json();
 }
 
 // ---------------------------------------------------------------------------
